@@ -24,13 +24,10 @@ output_txt = os.path.join(dir_path, "output.txt")
 
 CURRENCY = ["CNY", "USD", "HKD", "EUR"]
 app = xw.App(visible=False, add_book=False)
-# wb = app.books.open(r'C:\\GongCun\\Temp\\sample.xlsx')
 wb = app.books.open(file_path, read_only=True)
 nwb = app.books.add()
-# nwb.save(f'C:\\GongCun\\Temp\\output.xlsx')
 nwb.save(output_excel)
 nsht = nwb.sheets['Sheet1']
-# f = codecs.open("C:\\GongCun\\Temp\\output.txt", "w", "utf-8")
 f = codecs.open(output_txt, "w", "utf-8")
 
 header = "账务日期, 币种, 科目代码, 科目名称, 借方发生额, 贷方发生额, 借方余额, 贷方余额"
