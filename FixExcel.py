@@ -3,6 +3,7 @@ import re
 import sys
 import codecs
 import atexit
+import os.path
 
 
 # print(sys.stdout.encoding)
@@ -11,13 +12,26 @@ if sys.stdout.encoding != 'utf8':
 if sys.stderr.encoding != 'utf8':
     sys.stderr = codecs.getwriter('utf8')(sys.stderr.buffer, 'strict')
 
+if len(sys.argv) < 2:
+    print("Usage: FixExcel file.xlsx")
+    sys.exit(1)
+
+file_path = os.path.realpath(sys.argv[1])
+dir_path = os.path.dirname(file_path)
+# print(dirpath)
+output_excel = os.path.join(dir_path, "output.xlsx")
+output_txt = os.path.join(dir_path, "output.txt")
+
 CURRENCY = ["CNY", "USD", "HKD", "EUR"]
 app = xw.App(visible=False, add_book=False)
-wb = app.books.open(r'C:\\GongCun\\Temp\\sample.xlsx')
+# wb = app.books.open(r'C:\\GongCun\\Temp\\sample.xlsx')
+wb = app.books.open(file_path, read_only=True)
 nwb = app.books.add()
-nwb.save(f'C:\\GongCun\\Temp\\output.xlsx')
+# nwb.save(f'C:\\GongCun\\Temp\\output.xlsx')
+nwb.save(output_excel)
 nsht = nwb.sheets['Sheet1']
-f = codecs.open("C:\\GongCun\\Temp\\output.txt", "w", "utf-8")
+# f = codecs.open("C:\\GongCun\\Temp\\output.txt", "w", "utf-8")
+f = codecs.open(output_txt, "w", "utf-8")
 
 header = "账务日期, 币种, 科目代码, 科目名称, 借方发生额, 贷方发生额, 借方余额, 贷方余额"
 f.write(header + "\n")
@@ -47,10 +61,10 @@ def getRowNum(sht):
 found = False
 for sht in wb.sheets:
     row_num = getRowNum(sht)
-    print(row_num)
+    # print(row_num)
     for begin in range(1, row_num):
         prev = sht.range('A' + str(begin)).value
-        if prev and re.match('[0-9]@OD@', prev):
+        if prev and re.match('[0-9]@OD@', str(prev)):
             # print(prev)
             found = True
             break
