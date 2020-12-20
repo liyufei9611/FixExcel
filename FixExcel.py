@@ -12,7 +12,6 @@ if sys.stderr.encoding != 'utf8':
     sys.stderr = codecs.getwriter('utf8')(sys.stderr.buffer, 'strict')
 
 CURRENCY = ["CNY", "USD", "HKD", "EUR"]
-ROWNUM = 3000
 app = xw.App(visible=False, add_book=False)
 wb = app.books.open(r'C:\\GongCun\\Temp\\sample.xlsx')
 nwb = app.books.add()
@@ -22,12 +21,7 @@ f = codecs.open("C:\\GongCun\\Temp\\output.txt", "w", "utf-8")
 
 header = "账务日期, 币种, 科目代码, 科目名称, 借方发生额, 贷方发生额, 借方余额, 贷方余额"
 f.write(header + "\n")
-
 nsht.range('A1').value = header.split(",")
-# nwb.save()
-# nwb.close()
-# app.quit()
-# sys.exit(2)
 
 def _atexit():
     wb.close()
@@ -37,9 +31,24 @@ def _atexit():
 
 atexit.register(_atexit)
 
+def getRowNum(sht):
+    gap_cnt = 0
+    old_row_num = 0
+    row_num = sht['A1'].current_region.last_cell.row
+    while row_num - old_row_num > 2 or gap_cnt < 5:
+        if (row_num - old_row_num <= 2):
+            gap_cnt += 1
+        else:
+            gap_cnt = 0
+        old_row_num = row_num
+        row_num = sht['A' + str(row_num + 2)].current_region.last_cell.row
+    return row_num
+
 found = False
 for sht in wb.sheets:
-    for begin in range(1, ROWNUM):
+    row_num = getRowNum(sht)
+    print(row_num)
+    for begin in range(1, row_num):
         prev = sht.range('A' + str(begin)).value
         if prev and re.match('[0-9]@OD@', prev):
             # print(prev)
@@ -70,7 +79,6 @@ def procRange():
                 # ignore: dates or times are negative or too large (out of present range)
                 print("row " + repr(i) + " format error, skipped.")
                 continue
-            # content = sht.range('A' + str(i)).expand('right').options(ndim=1).api.Value2
             if not content:
                 continue
             # print(content)
@@ -90,7 +98,7 @@ def procRange():
                 nsht.range(scope.shape[0] + 1, 1).value = s.split(",")
 
 
-for end in range(begin + 1, ROWNUM):
+for end in range(begin + 1, row_num):
     value = sht.range('A' + str(end)).value
     if value and re.match('[0-9]@OD@', value):
         procRange()
@@ -99,3 +107,11 @@ for end in range(begin + 1, ROWNUM):
 
 procRange()
 
+nsht.range('A1').expand('table').columns.autofit()
+# for i in nwb.sheets:
+    # row_num = i['A1'].current_region.last_cell.row
+    # i.range('A1').expand('table').columns.autofit()
+    # print(row_num)
+    # value = i.range('A1').expand('table')
+    # value.colume_width = 32
+# nwb.save()
