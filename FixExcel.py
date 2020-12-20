@@ -119,10 +119,4 @@ for end in range(begin + 1, row_num):
 procRange()
 
 nsht.range('A1').expand('table').columns.autofit()
-# for i in nwb.sheets:
-    # row_num = i['A1'].current_region.last_cell.row
-    # i.range('A1').expand('table').columns.autofit()
-    # print(row_num)
-    # value = i.range('A1').expand('table')
-    # value.colume_width = 32
-# nwb.save()
+
