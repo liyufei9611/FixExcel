@@ -2,6 +2,7 @@ import xlwings as xw
 import re
 import sys
 import codecs
+import atexit
 
 
 # print(sys.stdout.encoding)
@@ -28,6 +29,14 @@ nsht.range('A1').value = header.split(",")
 # app.quit()
 # sys.exit(2)
 
+def _atexit():
+    wb.close()
+    nwb.save()
+    nwb.close()
+    app.quit()
+
+atexit.register(_atexit)
+
 found = False
 for sht in wb.sheets:
     for begin in range(1, ROWNUM):
@@ -44,7 +53,7 @@ if not found:
     sys.exit(1)
 
 
-def procRows():
+def procRange():
     for s in prev.split("|"):
         if re.match('S-ORG-ID:', s):
             x, orgId = s.split(":")
@@ -59,6 +68,7 @@ def procRows():
                 content = sht.range('A' + str(i)).expand('right').options(ndim=1).value
             except:
                 # ignore: dates or times are negative or too large (out of present range)
+                print("row " + repr(i) + " format error, skipped.")
                 continue
             # content = sht.range('A' + str(i)).expand('right').options(ndim=1).api.Value2
             if not content:
@@ -70,7 +80,7 @@ def procRows():
                 if val:
                     break
 
-            if len(content) >= 6 and re.match("[0-9]", str(val)):
+            if len(content) - idx >= 6 and re.match("[0-9]", str(val)):
                 s = finDate + ", " + currCode + ", " + str(int(content[idx])) + ", "
                 for j in range(idx + 1, idx + 5):
                     s += str(content[j]) + ", "
@@ -83,12 +93,9 @@ def procRows():
 for end in range(begin + 1, ROWNUM):
     value = sht.range('A' + str(end)).value
     if value and re.match('[0-9]@OD@', value):
-        procRows()
+        procRange()
         begin = end
         prev = value
 
-procRows()
-wb.close()
-nwb.save()
-nwb.close()
-app.quit()
+procRange()
+
