@@ -12,17 +12,12 @@
 
 * 如何使用 PyInstaller 生成可执行文件
 
-  我通过 PyCharm 将 PyInstaller 加入 External Tools 来生成可执行文件的，具体步骤
-  如下：
+  通过 PyCharm 将 PyInstaller 加入 External Tools 生成可执行文件：
   
   1. 在 File -> Project -> Python Interpreter 中增加 PyInstaller 模块。
   2. 在 File -> Project -> Tools -> External Tools 中增加 PyInstaller 工具，其中
      参数设定如下：
-     - Program :: =\path\to\pyinstaller.exe=
-     - Arguments :: =-F -n $FileNameWithoutExtension$.exe $FileNameWithoutExtension$.py=
-     - Working diretory :: =$FileDir$=
+     - Program :: \path\to\pyinstaller.exe
+     - Arguments :: -F -n $FileNameWithoutExtension$.exe $FileNameWithoutExtension$.py
+     - Working diretory :: $FileDir$
 
-  可以在 Tools 中直接执行，也可以在命令行中执行如下命令生成可执行文件：
-  #+begin_src sh
-    pyinstaller -F -n file.exe file.py
-  #+end_src
