@@ -120,3 +120,5 @@ procRange()
 
 nsht.range('A1').expand('table').columns.autofit()
 
+print("Generate the excel file: " + output_excel)
+print("Generate the txt file: " + output_txt)
