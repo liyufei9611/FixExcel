@@ -112,7 +112,7 @@ def procRange():
 
 for end in range(begin + 1, row_num):
     value = sht.range('A' + str(end)).value
-    if value and re.match('[0-9]@OD@', value):
+    if value and re.match('[0-9]@OD@', str(value)):
         procRange()
         begin = end
         prev = value
@@ -123,3 +123,4 @@ nsht.range('A1').expand('table').columns.autofit()
 
 print("Generate the excel file: " + output_excel)
 print("Generate the txt file: " + output_txt)
+
