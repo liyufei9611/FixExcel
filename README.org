@@ -1,16 +1,18 @@
+#-TITLE: 通过 Python 操作 Excel 表格
+
 * 用法
-  FixExcel.py 脚本将自动从 /file/.xlsx 工作表中搜寻符合格式的工作簿（sheet）做转
-  换，并在相同的路径下生成 output.xlsx 表格和 output.txt 文本。
+  FixExcel.py 脚本将转换 /file/.txt 文本，并在相同的路径下生成 output.xlsx 表格
+  和 output.txt 文本。
 
   #+begin_src sh
     # 直接执行脚本
-    python ./FixExcel.py file.xlsx
+    python ./FixExcel.py file.txt
 
     # 执行 PyInstaller 打包后的可执行文件
-    ./FixExcel.exe file.xlsx
+    ./FixExcel.exe file.txt
   #+end_src
 
-* 如何使用 PyInstaller 生成可执行文件
+* 使用 PyInstaller 生成可执行文件
 
   通过 PyCharm 将 PyInstaller 加入 External Tools 生成可执行文件：
   
@@ -20,4 +22,33 @@
      - Program :: \path\to\pyinstaller.exe
      - Arguments :: -F -n $FileNameWithoutExtension$.exe $FileNameWithoutExtension$.py
      - Working diretory :: $FileDir$
+  3. 执行 Tools -> External Tools -> PyInstaller 生成可执行文件（位于
+     project/dist 路径下）
+     
+* 在 Windows 上设置多版本 Python
+由于 Python3.9 + PyInstaller 在 Win10 上生成的可执行文件在 Win7 系统运行可能找不
+到依赖的 dll 文件，因此需要将 Python 降版本到 3.7 或 3.8 来打包，设置虚拟环境的
+步骤如下(参考[[https://www.freecodecamp.org/news/installing-multiple-python-versions-on-windows-using-virtualenv/][这里]])：
+1. 使用原有版本 python/pip 安装 virtualenv
+   #+begin_src sh
+     pip install virtualenv
+   #+end_src
+2. 安装 Python3.7 （注意不要勾选 “Add Python 3.7 to PATH”）
+3. 创建虚拟环境
+   #+begin_src sh
+     virtualenv \path\to\python37 -p path\to\python37\python.exe \
+                --no-pip --no-setuptools --no-wheel
+   #+end_src
+
+4. 进入虚拟环境并安装模块：在虚拟环境中直接通过 pip 安装模块，可能出现
+   HTTP_PROXY参数无效的情况，请在通过 py 安装模块：
+   #+begin_src sh
+     cd \path\to\python37\Scripts
+     .\activate.bat
+     (Python37)> py -m pip install xlwings --proxy="http://ip:port"
+     (Python37)> deactivate
+   #+end_src
+
+5. 在 PyCharm 中导入 Python3.7 解释器：注意选择 "Existing environment" 并从
+   "Virtualenv Environment" 中选择对应路径。
 

@@ -29,19 +29,19 @@ nsht = nwb.sheets[0]
 fin = codecs.open(file_path, "r", "utf-8")
 f = codecs.open(output_txt, "w", "utf-8")
 
-header = "账务日期" + '\xed'
-header += "币种" + '\xed'
-header += "机构号" + '\xed'
-header += "科目代码" + '\xed'
-header += "科目名称" + '\xed'
-header += "借方发生额" + '\xed'
-header += "贷方发生额" + '\xed'
-header += "借方余额" + '\xed'
-header += "贷方余额" + '\xed'
+header = "账务日期" + '\x1d'
+header += "币种" + '\x1d'
+header += "机构号" + '\x1d'
+header += "科目代码" + '\x1d'
+header += "科目名称" + '\x1d'
+header += "借方发生额" + '\x1d'
+header += "贷方发生额" + '\x1d'
+header += "借方余额" + '\x1d'
+header += "贷方余额"
 
 
-f.write(header + "\n")
-nsht.range('A1').value = header.split("\xed")
+# f.write(header + "\n")
+nsht.range('A1').value = header.split("\x1d")
 
 def _atexit():
     nwb.save()
@@ -83,8 +83,8 @@ def procRange():
         if len(content) < 6 or not re.match("[0-9]", str(content[0])):
             continue
 
-        s = finDate + '\xed' + currCode + '\xed' + orgId  + '\xed'
-        s += str(int(content[0])) + '\xed' # 科目代码
+        s = finDate + '\x1d' + currCode + '\x1d' + orgId  + '\x1d'
+        s += str(int(content[0])) + '\x1d' # 科目代码
 
         # 科目名称可能含有空格
         for j in range(1, len(content)):
@@ -98,16 +98,16 @@ def procRange():
         temp = ""
         for k in range(1, j):
             temp += content[k] + " "
-        s += temp.strip() + '\xed'
+        s += temp.strip() + '\x1d'
 
         idx = j
         for j in range(idx, idx + 3):
-            s += str(content[j]) + '\xed'
+            s += str(content[j]) + '\x1d'
         s += str(content[idx + 3])
 
         f.write(s + "\n")
         scope = nsht.range('A1').expand()
-        nsht.range(scope.shape[0] + 1, 1).value = s.split("\xed")
+        nsht.range(scope.shape[0] + 1, 1).value = s.split("\x1d")
 
 
 for end in range(begin + 1, row_num):
