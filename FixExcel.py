@@ -13,7 +13,7 @@ if sys.stderr.encoding != 'utf8':
     sys.stderr = codecs.getwriter('utf8')(sys.stderr.buffer, 'strict')
 
 if len(sys.argv) < 2:
-    print("Usage: FixExcel file.xlsx")
+    print("Usage: FixExcel input.file")
     sys.exit(1)
 
 file_path = os.path.realpath(sys.argv[1])
@@ -22,54 +22,46 @@ dir_path = os.path.dirname(file_path)
 output_excel = os.path.join(dir_path, "output.xlsx")
 output_txt = os.path.join(dir_path, "output.txt")
 
-CURRENCY = ["CNY", "USD", "HKD", "EUR"]
 app = xw.App(visible=False, add_book=False)
-wb = app.books.open(file_path, read_only=True)
 nwb = app.books.add()
 nwb.save(output_excel)
 nsht = nwb.sheets[0]
+fin = codecs.open(file_path, "r", "utf-8")
 f = codecs.open(output_txt, "w", "utf-8")
 
-header = "账务日期, 币种, 科目代码, 科目名称, 借方发生额, 贷方发生额, 借方余额, 贷方余额"
+header = "账务日期" + '\xed'
+header += "币种" + '\xed'
+header += "机构号" + '\xed'
+header += "科目代码" + '\xed'
+header += "科目名称" + '\xed'
+header += "借方发生额" + '\xed'
+header += "贷方发生额" + '\xed'
+header += "借方余额" + '\xed'
+header += "贷方余额" + '\xed'
+
+
 f.write(header + "\n")
-nsht.range('A1').value = header.split(",")
+nsht.range('A1').value = header.split("\xed")
 
 def _atexit():
-    wb.close()
     nwb.save()
     nwb.close()
     app.quit()
 
 atexit.register(_atexit)
 
-def getRowNum(sht):
-    gap_cnt = 0
-    old_row_num = 0
-    row_num = sht['A1'].current_region.last_cell.row
-    while row_num - old_row_num > 2 or gap_cnt < 5:
-        if (row_num - old_row_num <= 2):
-            gap_cnt += 1
-        else:
-            gap_cnt = 0
-        old_row_num = row_num
-        row_num = sht['A' + str(row_num + 2)].current_region.last_cell.row
-    return row_num
+lines = fin.readlines()
+row_num = len(lines)
 
 found = False
-for sht in wb.sheets:
-    row_num = getRowNum(sht)
-    # print(row_num)
-    for begin in range(1, row_num):
-        prev = sht.range('A' + str(begin)).value
-        if prev and re.match('[0-9]@OD@', str(prev)):
-            # print(prev)
-            found = True
-            break
-    if (found):
+for begin in range(0, row_num):
+    prev = lines[begin]
+    if prev and re.match('[0-9]@OD@', str(prev)):
+        found = True
         break
 
 if not found:
-    print("cannot find the sheet")
+    print("Unable to find the correct format file.")
     sys.exit(1)
 
 
@@ -81,37 +73,45 @@ def procRange():
             x, finDate = s.split(":")
         elif re.match('CCY-ID:', s):
             x, currCode = s.split(":")
-    if re.match("1620", orgId) and currCode in CURRENCY:
-        # rng = sht.range('A' + str(i + 1))
-        for i in range(begin + 1, end):
-            # print(i)
-            try:
-                content = sht.range('A' + str(i)).expand('right').options(ndim=1).value
-            except:
-                # ignore: dates or times are negative or too large (out of present range)
-                print("row " + repr(i) + " format error, skipped.")
-                continue
-            if not content:
-                continue
-            # print(content)
 
-            for idx, val in enumerate(content):
-                # print(val)
-                if val:
-                    break
+    if (not orgId) or (not finDate) or (not currCode):
+        print("Unable to fetch the value, skipped")
+        return
 
-            if len(content) - idx >= 6 and re.match("[0-9]", str(val)):
-                s = finDate + ", " + currCode + ", " + str(int(content[idx])) + ", "
-                for j in range(idx + 1, idx + 5):
-                    s += str(content[j]) + ", "
-                s += str(content[idx + 5])
-                f.write(s + "\n")
-                scope = nsht.range('A1').expand()
-                nsht.range(scope.shape[0] + 1, 1).value = s.split(",")
+    for i in range(begin + 1, end):
+        content = lines[i].split()
+        if len(content) < 6 or not re.match("[0-9]", str(content[0])):
+            continue
+
+        s = finDate + '\xed' + currCode + '\xed' + orgId  + '\xed'
+        s += str(int(content[0])) + '\xed' # 科目代码
+
+        # 科目名称可能含有空格
+        for j in range(1, len(content)):
+            if (not content[j].isdigit()) and \
+               (content[j].replace(",", "").replace(".", "", 1).isdigit()):
+                break
+        else:
+            print("Unable to fetch the account name, skipped")
+            return
+
+        temp = ""
+        for k in range(1, j):
+            temp += content[k] + " "
+        s += temp.strip() + '\xed'
+
+        idx = j
+        for j in range(idx, idx + 3):
+            s += str(content[j]) + '\xed'
+        s += str(content[idx + 3])
+
+        f.write(s + "\n")
+        scope = nsht.range('A1').expand()
+        nsht.range(scope.shape[0] + 1, 1).value = s.split("\xed")
 
 
 for end in range(begin + 1, row_num):
-    value = sht.range('A' + str(end)).value
+    value = lines[end]
     if value and re.match('[0-9]@OD@', str(value)):
         procRange()
         begin = end
