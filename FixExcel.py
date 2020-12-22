@@ -27,7 +27,7 @@ app = xw.App(visible=False, add_book=False)
 wb = app.books.open(file_path, read_only=True)
 nwb = app.books.add()
 nwb.save(output_excel)
-nsht = nwb.sheets['Sheet1']
+nsht = nwb.sheets[0]
 f = codecs.open(output_txt, "w", "utf-8")
 
 header = "账务日期, 币种, 科目代码, 科目名称, 借方发生额, 贷方发生额, 借方余额, 贷方余额"
@@ -84,6 +84,7 @@ def procRange():
     if re.match("1620", orgId) and currCode in CURRENCY:
         # rng = sht.range('A' + str(i + 1))
         for i in range(begin + 1, end):
+            # print(i)
             try:
                 content = sht.range('A' + str(i)).expand('right').options(ndim=1).value
             except:
@@ -111,7 +112,7 @@ def procRange():
 
 for end in range(begin + 1, row_num):
     value = sht.range('A' + str(end)).value
-    if value and re.match('[0-9]@OD@', str(value)):
+    if value and re.match('[0-9]@OD@', value):
         procRange()
         begin = end
         prev = value
@@ -122,4 +123,3 @@ nsht.range('A1').expand('table').columns.autofit()
 
 print("Generate the excel file: " + output_excel)
 print("Generate the txt file: " + output_txt)
-
