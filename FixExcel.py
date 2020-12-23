@@ -5,6 +5,7 @@ import codecs
 import atexit
 import os.path
 import gzip
+import datetime as dt
 
 
 # print(sys.stdout.encoding)
@@ -14,14 +15,43 @@ if sys.stderr.encoding != 'utf8':
     sys.stderr = codecs.getwriter('utf8')(sys.stderr.buffer, 'strict')
 
 
-def procDir(fpath):
-    print("processing directory: " + fpath)
-    return
-
-
 def procExcel(fpath):
+    # process the .xlsx file or .xls file
     print("processing excel: " + fpath)
-    return
+    file_path = os.path.realpath(fpath)
+    dir_path = os.path.dirname(file_path)
+    file_name = os.path.basename(fpath)
+    # file_name = re.sub('\..*$', '', file_name)
+    if file_name.lower().endswith(('.xlsx', '.xls')):
+        arr = file_name.split('.')
+        if len(arr) > 1:
+            file_name = ""
+            for i in range(0, len(arr) - 2):
+                file_name += arr[i] + "."
+            file_name += arr[-2]
+
+    output_name = file_name + "_convert.txt"
+    output_txt = os.path.join(dir_path, output_name)
+    f = codecs.open(output_txt, "w", "utf-8")
+
+    app = xw.App(visible=False, add_book=False)
+    wb = app.books.open(file_path, read_only=True)
+    sht = wb.sheets[0]
+
+    def _atexit():
+        wb.close()
+        app.quit()
+
+    atexit.register(_atexit)
+
+    content = sht.range('A1').expand('table').options(dates=dt.date).value
+    for row_value in content:
+        s = ""
+        for val in row_value:
+            s += str(val) + '\x1d'
+        f.write(s.rstrip('\x1d') + "\n")
+
+    print("Generate the txt file: " + output_txt)
 
 
 def procFile(fpath):
@@ -39,7 +69,7 @@ def procFile(fpath):
                 file_name += arr[i] + "."
             file_name += arr[-2]
 
-    output_name = file_name + "_fix.txt"
+    output_name = file_name + "_convert.txt"
     output_txt = os.path.join(dir_path, output_name)
 
     if fpath.lower().endswith(('.gz', '.gzip')):
@@ -123,20 +153,33 @@ def procFile(fpath):
     print("Generate the txt file: " + output_txt)
 
 
+def procDir(fpath):
+    print("processing directory: " + fpath)
+    file_path = os.path.realpath(fpath)
+    file_list = os.listdir(file_path)
+    for _f in file_list:
+        if _f.startswith('~$'):
+            continue
+        # 注意对于目录会有递归调用
+        file_paths = os.path.join(file_path, _f)
+        callFunc(file_paths)
+
+
+def callFunc(fpath):
+    if os.path.isfile(fpath):
+        if fpath.lower().endswith(('.xlsx', '.xls')):
+            procExcel(fpath)
+        else:
+            procFile(fpath)
+    elif os.path.isdir(fpath):
+        procDir(fpath)
+    else:
+        print("Unknown file type: " + fpath)
+
+
 ################################
 if len(sys.argv) < 2:
     print("Usage: FixExcel <file|directory>")
     sys.exit(1)
 
-fpath = sys.argv[1]
-if os.path.isfile(fpath):
-    if fpath.lower().endswith(('.xlsx', '.xls')):
-        procExcel(fpath)
-    else:
-        procFile(fpath)
-elif os.path.isdir(fpath):
-    procDir(fpath)
-else:
-    print("Unknown file type: " + fpath)
-    sys.exit(1)
-
+callFunc(sys.argv[1])
