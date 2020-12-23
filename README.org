@@ -1,13 +1,18 @@
 * 用法
-  FixExcel.py 脚本将转换 /file/.txt 文本，并在相同的路径下生成 output.xlsx 表格
-  和 output.txt 文本。
+  FixExcel.py 脚本按规则转换 .txt、.xlsx、.gz 等类型的文件，并可以在指定目录下生
+  成文本。第一个参数是必填参数，可以是文件名或目录名，如果是目录名，将会处理目录
+  下的所有文件或子目录（递归调用）；第二个参数是输出目录，是可选项，如果没有指定
+  输出目录，将会在输出在当期路径下（程序执行路径），如果指定路径但目录不存在，程
+  序会自动创建目录。
+
+  *注意* ：不要将输出目录放在输入目录下，由于会递归调用，将产生非预期结果。
 
   #+begin_src sh
     # 直接执行脚本
-    python ./FixExcel.py file.txt
+    python ./FixExcel.py < file | directory > [ output-directory ]
 
     # 执行 PyInstaller 打包后的可执行文件
-    ./FixExcel.exe file.txt
+    FixExcel.exe < file | directory > [ output-directory ]
   #+end_src
 
 * 使用 PyInstaller 生成可执行文件
