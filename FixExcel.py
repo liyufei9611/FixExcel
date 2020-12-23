@@ -6,20 +6,33 @@ import atexit
 import os.path
 import gzip
 import datetime as dt
+import errno
 
 
-# print(sys.stdout.encoding)
 if sys.stdout.encoding != 'utf8':
     sys.stdout = codecs.getwriter('utf8')(sys.stdout.buffer, 'strict')
 if sys.stderr.encoding != 'utf8':
     sys.stderr = codecs.getwriter('utf8')(sys.stderr.buffer, 'strict')
 
 
+if len(sys.argv) < 2:
+    print("Usage: FixExcel < file | directory > [ output-directory ]")
+    sys.exit(1)
+
+if len(sys.argv) < 3:
+    output_dir = os.path.dirname(sys.argv[0])
+else:
+    output_dir = sys.argv[2]
+    try:
+        os.mkdir(output_dir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
 def procExcel(fpath):
     # process the .xlsx file or .xls file
     print("processing excel: " + fpath)
     file_path = os.path.realpath(fpath)
-    dir_path = os.path.dirname(file_path)
     file_name = os.path.basename(fpath)
     # file_name = re.sub('\..*$', '', file_name)
     if file_name.lower().endswith(('.xlsx', '.xls')):
@@ -31,7 +44,7 @@ def procExcel(fpath):
             file_name += arr[-2]
 
     output_name = file_name + "_convert.txt"
-    output_txt = os.path.join(dir_path, output_name)
+    output_txt = os.path.join(output_dir, output_name)
     f = codecs.open(output_txt, "w", "utf-8")
 
     app = xw.App(visible=False, add_book=False)
@@ -58,7 +71,6 @@ def procFile(fpath):
     # process the .txt file or .gz file
     print("processing file: " + fpath)
     file_path = os.path.realpath(fpath)
-    dir_path = os.path.dirname(file_path)
     file_name = os.path.basename(fpath)
     # file_name = re.sub('\..*$', '', file_name)
     if file_name.lower().endswith(('.gz', '.gzip', '.txt')):
@@ -70,7 +82,7 @@ def procFile(fpath):
             file_name += arr[-2]
 
     output_name = file_name + "_convert.txt"
-    output_txt = os.path.join(dir_path, output_name)
+    output_txt = os.path.join(output_dir, output_name)
 
     if fpath.lower().endswith(('.gz', '.gzip')):
         fin = gzip.open(fpath, 'rt', encoding='utf8')
@@ -178,8 +190,4 @@ def callFunc(fpath):
 
 
 ################################
-if len(sys.argv) < 2:
-    print("Usage: FixExcel <file|directory>")
-    sys.exit(1)
-
 callFunc(sys.argv[1])
