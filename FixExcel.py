@@ -1,8 +1,6 @@
-import xlwings as xw
 import re
 import sys
 import codecs
-import atexit
 import os.path
 
 
@@ -18,36 +16,10 @@ if len(sys.argv) < 2:
 
 file_path = os.path.realpath(sys.argv[1])
 dir_path = os.path.dirname(file_path)
-output_excel = os.path.join(dir_path, "output.xlsx")
 output_txt = os.path.join(dir_path, "output.txt")
 
-app = xw.App(visible=False, add_book=False)
-nwb = app.books.add()
-nwb.save(output_excel)
-nsht = nwb.sheets[0]
 fin = codecs.open(file_path, "r", "utf-8")
 f = codecs.open(output_txt, "w", "utf-8")
-
-header = "账务日期" + '\x1d'
-header += "币种" + '\x1d'
-header += "机构号" + '\x1d'
-header += "科目代码" + '\x1d'
-header += "科目名称" + '\x1d'
-header += "借方发生额" + '\x1d'
-header += "贷方发生额" + '\x1d'
-header += "借方余额" + '\x1d'
-header += "贷方余额"
-
-
-# f.write(header + "\n")
-nsht.range('A1').value = header.split("\x1d")
-
-def _atexit():
-    nwb.save()
-    nwb.close()
-    app.quit()
-
-atexit.register(_atexit)
 
 lines = fin.readlines()
 row_num = len(lines)
@@ -82,6 +54,7 @@ def procRange():
         if len(content) < 6 or not re.match("[0-9]", str(content[0])):
             continue
 
+        # 账务日期 + 币种 + 机构号
         s = finDate + '\x1d' + currCode + '\x1d' + orgId  + '\x1d'
         s += str(int(content[0])) + '\x1d' # 科目代码
 
@@ -99,6 +72,7 @@ def procRange():
             temp += content[k] + " "
         s += temp.strip() + '\x1d'
 
+        # 借方发生额 + 贷方发生额 + 借方余额 + 贷方余额
         if len(content) - j < 4:
             print("Format error, skipped")
             return
@@ -109,9 +83,6 @@ def procRange():
         s += str(content[idx + 3])
 
         f.write(s + "\n")
-        scope = nsht.range('A1').expand()
-        nsht.range(scope.shape[0] + 1, 1).value = s.split("\x1d")
-
 
 for end in range(begin + 1, row_num):
     value = lines[end]
@@ -122,8 +93,5 @@ for end in range(begin + 1, row_num):
 
 procRange()
 
-nsht.range('A1').expand('table').columns.autofit()
-
-print("Generate the excel file: " + output_excel)
 print("Generate the txt file: " + output_txt)
 
