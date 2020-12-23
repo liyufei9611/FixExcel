@@ -18,7 +18,6 @@ if len(sys.argv) < 2:
 
 file_path = os.path.realpath(sys.argv[1])
 dir_path = os.path.dirname(file_path)
-# print(dirpath)
 output_excel = os.path.join(dir_path, "output.xlsx")
 output_txt = os.path.join(dir_path, "output.txt")
 
@@ -99,6 +98,10 @@ def procRange():
         for k in range(1, j):
             temp += content[k] + " "
         s += temp.strip() + '\x1d'
+
+        if len(content) - j < 4:
+            print("Format error, skipped")
+            return
 
         idx = j
         for j in range(idx, idx + 3):
