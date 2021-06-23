@@ -1,4 +1,4 @@
-import xlwings as xw
+importpip as xw
 import re
 import sys
 import codecs
@@ -30,7 +30,7 @@ nwb.save(output_excel)
 nsht = nwb.sheets[0]
 f = codecs.open(output_txt, "w", "utf-8")
 
-header = "账务日期, 币种, 科目代码, 科目名称, 借方发生额, 贷方发生额, 借方余额, 贷方余额"
+header = "账务日期, 币种, 报表语言, 科目代码, 科目名称, 借方发生额, 贷方发生额, 借方余额, 贷方余额"
 f.write(header + "\n")
 nsht.range('A1').value = header.split(",")
 
@@ -81,6 +81,9 @@ def procRange():
             x, finDate = s.split(":")
         elif re.match('CCY-ID:', s):
             x, currCode = s.split(":")
+        elif re.match('LANG:', s):
+            x, lang = s.split(":")
+
     if re.match("1620", orgId) and currCode in CURRENCY:
         # rng = sht.range('A' + str(i + 1))
         for i in range(begin + 1, end):
@@ -101,7 +104,7 @@ def procRange():
                     break
 
             if len(content) - idx >= 6 and re.match("[0-9]", str(val)):
-                s = finDate + ", " + currCode + ", " + str(int(content[idx])) + ", "
+                s = finDate + ", " + currCode + ", " + lang + ", " + + str(int(content[idx])) + ", "
                 for j in range(idx + 1, idx + 5):
                     s += str(content[j]) + ", "
                 s += str(content[idx + 5])
