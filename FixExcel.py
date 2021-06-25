@@ -113,6 +113,8 @@ def procFile(fpath):
                 x, fin_date = s.split(":")
             elif re.match('CCY-ID:', s):
                 x, curr_code = s.split(":")
+            elif re.match('LANG:', s):
+                x, lang = s.split(":")
 
         if (not org_id) or (not fin_date) or (not curr_code):
             print("Unable to fetch the value, skipped")
@@ -124,7 +126,7 @@ def procFile(fpath):
                 continue
 
             # "账务日期" + "币种" + "机构号"
-            s = fin_date + '\x1d' + curr_code + '\x1d' + org_id  + '\x1d'
+            s = fin_date + '\x1d' + curr_code + '\x1d' + org_id  + '\x1d' + lang  + '\x1d'
             s += str(int(content[0])) + '\x1d' # 科目代码
 
             # 科目名称可能含有空格
