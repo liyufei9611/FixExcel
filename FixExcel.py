@@ -43,7 +43,7 @@ def procExcel(fpath):
                 file_name += arr[i] + "."
             file_name += arr[-2]
 
-    output_name = file_name + "_convert.txt"
+    output_name = file_name + "_CONVERT.TXT"
     output_txt = os.path.join(output_dir, output_name)
     f = codecs.open(output_txt, "w", "utf-8")
 
