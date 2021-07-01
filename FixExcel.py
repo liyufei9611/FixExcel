@@ -81,7 +81,7 @@ def procFile(fpath):
                 file_name += arr[i] + "."
             file_name += arr[-2]
 
-    output_name = file_name + "_convert.txt"
+    output_name = file_name + "_CONVERT.TXT"
     output_txt = os.path.join(output_dir, output_name)
 
     if fpath.lower().endswith(('.gz', '.gzip')):
@@ -126,8 +126,8 @@ def procFile(fpath):
                 continue
 
             # "账务日期" + "币种" + "机构号"
-            s = fin_date + '\x1d' + curr_code + '\x1d' + org_id  + '\x1d' + lang  + '\x1d'
-            s += str(int(content[0])) + '\x1d' # 科目代码
+            s = fin_date + '\x1d' + curr_code + '\x1d' + org_id  + '\x1d'+ lang  + '\x1d'
+            s += str(content[0]) + '\x1d' # 科目代码
 
             # 科目名称可能含有空格
             for j in range(1, len(content)):
@@ -150,8 +150,8 @@ def procFile(fpath):
 
             idx = j
             for j in range(idx, idx + 3):
-                s += str(content[j]) + '\x1d'
-            s += str(content[idx + 3])
+                s += str(content[j]).replace(',', '') + '\x1d'
+            s += str(content[idx + 3]).replace(',', '')
 
             f.write(s + "\n")
 
